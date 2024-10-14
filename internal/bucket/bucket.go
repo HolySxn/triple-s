@@ -1,12 +1,42 @@
 package bucket
 
-import "regexp"
+import (
+	"encoding/csv"
+	"errors"
+	"os"
 
-func isValidBucketName(bucketName string) bool {
-	// Compile the regex pattern for bucket name validation
-	re := regexp.MustCompile(`^(?!-)(?!.*--)(?!.*\.\.)(?!.*\.$)(?!.*\-$)([a-z0-9][a-z0-9.-]{1,61}[a-z0-9])?$`)
+	"triple-s/internal/utils"
+)
 
-	// Check length and then match with regex
-	return len(bucketName) >= 3 && len(bucketName) <= 63 && re.MatchString(bucketName) &&
-		!regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`).MatchString(bucketName)
+func CreateBucket(name string, dir string) error {
+	if !utils.IsValidBucketName(name) {
+		return errors.New("invalid bucket name")
+	}
+
+	bucket_dir := dir + "/" + name
+	err := os.Mkdir(bucket_dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	createCSVbucket(bucket_dir)
+	return nil
+}
+
+func createCSVbucket(name string) error {
+	file, err := os.Create(name + "/objects.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	header := []string{"Name", "CreationTime", "LastModifiedTime", "Status"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	return nil
 }
