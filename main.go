@@ -10,7 +10,7 @@ import (
 var (
 	help = flag.Bool("help", false, "Show help screen")
 	port = flag.String("port", "3000", "Port number")
-	dir  = flag.String("dir", "data", "Path to the directory")
+	dir  = flag.String("dir", "./data", "Path to the directory")
 )
 
 func main() {
