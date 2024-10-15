@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 )
 
@@ -20,4 +21,26 @@ func CreateCSV(dir string, name string, header []string) error {
 	}
 
 	return nil
+}
+
+func WriteCSV(dir string, record []string) error{
+	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil{
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	err = writer.Write(record)
+	fmt.Println(record)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func UpdateCSV(dir string, name string,){
+
 }

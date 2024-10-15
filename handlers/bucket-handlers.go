@@ -16,7 +16,7 @@ func BucketHandler(dir string) http.HandlerFunc {
 		case http.MethodPut:
 			err := bucket.CreateBucket(bucketName, dir)
 			if err != nil {
-				http.Error(w, "Failed to create bucket", http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 
