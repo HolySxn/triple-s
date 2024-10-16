@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"triple-s/handlers"
 	"triple-s/internal/utils"
@@ -17,13 +16,6 @@ var (
 	port = flag.String("port", "3000", "Port number")
 	dir  = flag.String("dir", "data", "Path to the directory")
 )
-
-type Bucket struct {
-	Name             string
-	CreationTime     time.Time
-	LastModifiedTime time.Time
-	Status           string
-}
 
 func main() {
 	flag.Parse()
