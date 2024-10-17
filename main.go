@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"triple-s/handlers"
 	"triple-s/internal/utils"
@@ -34,7 +33,10 @@ func main() {
 		return
 	}
 
-	createStorage()
+	err := utils.CreateStorage(*dir)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Creatin new server
 	mux := http.NewServeMux()
 
@@ -42,25 +44,6 @@ func main() {
 	mux.HandleFunc("//", handlers.ObjectHnadler)
 
 	log.Printf("starting server on :%v\n", *port)
-	err := http.ListenAndServe(":"+*port, mux)
+	err = http.ListenAndServe(":"+*port, mux)
 	log.Fatal(err)
-}
-
-func createStorage() {
-	err := os.MkdirAll(*dir, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if !isExist(*dir + "/buckets.csv") {
-		utils.CreateCSV(*dir, "buckets", []string{"Name", "CreationTime", "LastModifiedTime", "Status"})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func isExist(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
 }

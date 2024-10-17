@@ -3,7 +3,7 @@ package bucket
 import (
 	"encoding/csv"
 	"encoding/xml"
-	"errors"
+	"net/http"
 	"os"
 	"time"
 
@@ -21,42 +21,38 @@ type Bucket struct {
 	Status           string
 }
 
-func CreateBucket(name string, dir string) error {
+func CreateBucket(name string, dir string) int {
 	if !utils.IsValidBucketName(name) {
-		return errors.New("invalid bucket name")
+		return http.StatusBadRequest
 	}
 
 	bucket_dir := dir + "/" + name
 	err := os.Mkdir(bucket_dir, os.ModePerm)
 	if err != nil {
-		return err
+		return http.StatusConflict
 	}
 
 	metaData := []string{name, time.Now().Format("2006-01-02 15:04:05 MST"), time.Now().Format("2006-01-02 15:04:05 MST"), "Active"}
 	err = utils.WriteCSV(dir+"/buckets.csv", metaData)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError
 	}
 
-	return nil
+	return http.StatusOK
 }
 
-func GetBuckets(dir, name string) ([]byte, error) {
+func GetBuckets(dir, name string) ([]byte, int) {
 	file, err := os.Open(dir + "/" + name + ".csv")
 	if err != nil {
-		return nil, err
+		return nil, http.StatusInternalServerError
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 
-	if err != nil {
-		return nil, err
-	}
-
 	records, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, http.StatusInternalServerError
 	}
 
 	response := ListAllMyBucketsResult{Buckets: []Bucket{}}
@@ -72,7 +68,26 @@ func GetBuckets(dir, name string) ([]byte, error) {
 
 	xmlData, err := xml.MarshalIndent(response, "", " ")
 	if err != nil {
-		return nil, err
+		return nil, http.StatusInternalServerError
 	}
-	return xmlData, nil
+	return xmlData, http.StatusOK
+}
+
+func DeleteBucket(name string, dir string) int {
+	bucket_dir := dir + "/" + name
+	if !utils.IsExist(bucket_dir) {
+		return http.StatusNotFound
+	}
+
+	files := utils.PahtFiles(bucket_dir)
+	if len(files) > 1 {
+		return http.StatusConflict
+	}
+
+	err := os.RemoveAll(bucket_dir)
+	if err != nil{
+		return http.StatusInternalServerError
+	}
+
+	return http.StatusNoContent
 }

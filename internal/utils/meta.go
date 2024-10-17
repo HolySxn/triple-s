@@ -41,3 +41,20 @@ func WriteCSV(dir string, record []string) error {
 
 func UpdateCSV(dir string, name string) {
 }
+
+func CreateStorage(dir string) error {
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	// Create buckets.csv if not exist
+	if !IsExist(dir + "/buckets.csv") {
+		err = CreateCSV(dir, "buckets", []string{"Name", "CreationTime", "LastModifiedTime", "Status"})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

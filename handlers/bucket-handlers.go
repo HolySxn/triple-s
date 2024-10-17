@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"triple-s/internal/bucket"
+	"triple-s/internal/utils"
 )
 
 func BucketHandler(dir string) http.HandlerFunc {
@@ -14,31 +15,36 @@ func BucketHandler(dir string) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPut:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
-			err := bucket.CreateBucket(bucketName, dir)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+			status := bucket.CreateBucket(bucketName, dir)
+			if status != http.StatusOK{
+				http.Error(w, http.StatusText(status), status)
 				return
 			}
-
-			w.WriteHeader(http.StatusCreated)
+			utils.CreateCSV(dir+"/"+bucketName, "objects", []string{"ObjectKey", "Size", "ContentType", "LastModified"})
+			w.WriteHeader(status)
 			w.Write([]byte("Bucket created successfully"))
-			return
 		case http.MethodGet:
-			xmlData, err := bucket.GetBuckets(dir, "buckets")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+			xmlData, status := bucket.GetBuckets(dir, "buckets")
+			if status != http.StatusOK{
+				http.Error(w, http.StatusText(status), status)
 				return
 			}
 
 			w.Header().Set("Content-Type", "application/xml")
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(status)
 			w.Write([]byte(xml.Header))
 			w.Write(xmlData)
 		case http.MethodDelete:
-
+			bucketName := strings.TrimPrefix(r.URL.Path, "/")
+			status := bucket.DeleteBucket(bucketName, dir)
+			if status != http.StatusNoContent{
+				http.Error(w, http.StatusText(status), status)
+				return
+			}
+			w.WriteHeader(status)
+			w.Write([]byte("Bucket was successully deleted"))
 		default:
 			http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed)
-			return
 		}
 	}
 }
