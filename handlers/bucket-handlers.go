@@ -14,7 +14,7 @@ func BucketHandler(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
-			bucketName := strings.TrimPrefix(r.URL.Path, "/")
+			bucketName := r.URL.Query().Get("BucketName")
 			status := bucket.CreateBucket(bucketName, dir)
 			if status != http.StatusOK{
 				http.Error(w, http.StatusText(status), status)

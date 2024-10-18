@@ -40,8 +40,8 @@ func main() {
 	// Creatin new server
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/*", handlers.BucketHandler(*dir))
-	mux.HandleFunc("//", handlers.ObjectHnadler)
+	mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))
+	mux.HandleFunc("/{BucketName}/{ObjectKey}", handlers.ObjectHnadler)
 
 	log.Printf("starting server on :%v\n", *port)
 	err = http.ListenAndServe(":"+*port, mux)
