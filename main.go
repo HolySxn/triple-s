@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Creatin new server
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))

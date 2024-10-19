@@ -1,7 +1,6 @@
 package bucket
 
 import (
-	"encoding/csv"
 	"encoding/xml"
 	"net/http"
 	"os"
@@ -42,15 +41,7 @@ func CreateBucket(name string, dir string) int {
 }
 
 func GetBuckets(dir, name string) ([]byte, int) {
-	file, err := os.Open(dir + "/" + name + ".csv")
-	if err != nil {
-		return nil, http.StatusInternalServerError
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-
-	records, err := reader.ReadAll()
+	records, err := utils.ReadCSV(dir + "/" + name + ".csv")
 	if err != nil {
 		return nil, http.StatusInternalServerError
 	}
@@ -74,20 +65,37 @@ func GetBuckets(dir, name string) ([]byte, int) {
 }
 
 func DeleteBucket(name string, dir string) int {
-	bucket_dir := dir + "/" + name
-	if !utils.IsExist(bucket_dir) {
+	if flag, index := utils.FindName(dir+"/buckets.csv", name); flag {
+		bucket_dir := dir + "/" + name
+		if utils.IsEmptyCSV(bucket_dir + "/objects.csv") {
+			// Remove bucket
+			err := os.RemoveAll(bucket_dir)
+			if err != nil {
+				return http.StatusInternalServerError
+			}
+
+			// Delete data from metadata
+			data, err := utils.ReadCSV(dir + "/buckets.csv")
+			if err != nil {
+				return http.StatusInternalServerError
+			}
+
+			data = append(data[0:index], data[index+1:]...)
+			err = utils.CreateCSV(dir + "/buckets.csv")
+			if err != nil {
+				return http.StatusInternalServerError
+			}
+
+			err = utils.WriteAllCSV(dir+"/buckets.csv", data)
+			if err != nil {
+				return http.StatusInternalServerError
+			}
+
+			return http.StatusNoContent
+		} else {
+			return http.StatusConflict
+		}
+	} else {
 		return http.StatusNotFound
 	}
-
-	files := utils.PahtFiles(bucket_dir)
-	if len(files) > 1 {
-		return http.StatusConflict
-	}
-
-	err := os.RemoveAll(bucket_dir)
-	if err != nil{
-		return http.StatusInternalServerError
-	}
-
-	return http.StatusNoContent
 }

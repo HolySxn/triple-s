@@ -20,7 +20,19 @@ func BucketHandler(dir string) http.HandlerFunc {
 				http.Error(w, http.StatusText(status), status)
 				return
 			}
-			utils.CreateCSV(dir+"/"+bucketName, "objects", []string{"ObjectKey", "Size", "ContentType", "LastModified"})
+
+			err := utils.CreateCSV(dir+"/"+bucketName+"/objects.csv")
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			err = utils.WriteCSV(dir+"/"+bucketName+"/objects.csv", []string{"ObjectKey", "Size", "ContentType", "LastModified"})
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+			
 			w.WriteHeader(status)
 			w.Write([]byte("Bucket created successfully"))
 		case http.MethodGet:
