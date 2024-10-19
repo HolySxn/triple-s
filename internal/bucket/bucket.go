@@ -40,8 +40,8 @@ func CreateBucket(name string, dir string) int {
 	return http.StatusOK
 }
 
-func GetBuckets(dir, name string) ([]byte, int) {
-	records, err := utils.ReadCSV(dir + "/" + name + ".csv")
+func GetBucketsXML(dir string) ([]byte, int) {
+	records, err := utils.ReadCSV(dir)
 	if err != nil {
 		return nil, http.StatusInternalServerError
 	}

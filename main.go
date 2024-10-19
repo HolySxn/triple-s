@@ -40,7 +40,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))
+	mux.HandleFunc("/", handlers.BucketHandler(*dir))
+	// mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))
 	mux.HandleFunc("/{BucketName}/{ObjectKey}", handlers.ObjectHnadler)
 
 	log.Printf("starting server on :%v\n", *port)

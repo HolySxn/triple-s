@@ -20,7 +20,7 @@ func CreateCSV(dir string) error {
 }
 
 func WriteCSV(dir string, record []string) error {
-	file, err := os.Open(dir)
+	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o0644)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func WriteCSV(dir string, record []string) error {
 }
 
 func WriteAllCSV(dir string, record [][]string) error {
-	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND, 0o644)
+	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func CreateStorage(dir string) error {
 }
 
 func FindName(dir, name string) (bool, int) {
-	file, err := os.Open(dir + "/buckets.csv")
+	file, err := os.Open(dir)
 	if err != nil {
 		return false, -1
 	}

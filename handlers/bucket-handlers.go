@@ -14,14 +14,14 @@ func BucketHandler(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
-			bucketName := r.URL.Query().Get("BucketName")
+			bucketName := strings.TrimPrefix(r.URL.Path, "/")
 			status := bucket.CreateBucket(bucketName, dir)
-			if status != http.StatusOK{
+			if status != http.StatusOK {
 				http.Error(w, http.StatusText(status), status)
 				return
 			}
 
-			err := utils.CreateCSV(dir+"/"+bucketName+"/objects.csv")
+			err := utils.CreateCSV(dir + "/" + bucketName + "/objects.csv")
 			if err != nil {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
@@ -32,12 +32,12 @@ func BucketHandler(dir string) http.HandlerFunc {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.WriteHeader(status)
 			w.Write([]byte("Bucket created successfully"))
 		case http.MethodGet:
-			xmlData, status := bucket.GetBuckets(dir, "buckets")
-			if status != http.StatusOK{
+			xmlData, status := bucket.GetBucketsXML(dir + "/buckets.csv")
+			if status != http.StatusOK {
 				http.Error(w, http.StatusText(status), status)
 				return
 			}
@@ -49,7 +49,7 @@ func BucketHandler(dir string) http.HandlerFunc {
 		case http.MethodDelete:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
 			status := bucket.DeleteBucket(bucketName, dir)
-			if status != http.StatusNoContent{
+			if status != http.StatusNoContent {
 				http.Error(w, http.StatusText(status), status)
 				return
 			}
