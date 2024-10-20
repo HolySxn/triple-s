@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"os"
 )
@@ -70,7 +71,32 @@ func ReadCSV(dir string) ([][]string, error) {
 	return records, nil
 }
 
-func UpdateCSV(dir string, name string) {
+func UpdateCSV(dir string, flag string, index int, record []string) error {
+	data, err := ReadCSV(dir)
+	if err != nil {
+		return err
+	}
+
+	err = CreateCSV(dir)
+	if err != nil {
+		return err
+	}
+
+	switch flag {
+	case "delete":
+		data = append(data[0:index], data[index+1:]...)
+	case "update":
+		data[index] = record
+	default:
+		return errors.New("not appropriate flag")
+	}
+
+	err = WriteAllCSV(dir, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func CreateStorage(dir string) error {

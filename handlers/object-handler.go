@@ -35,14 +35,20 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 			}
 
 			csv_dir := path.Join(dir, bucket_name, "objects.csv")
-			if f, index := utils.FindName(path.Join(dir, "buckets.csv"), bucket_name); f {
-				utils.
-			}
-			err = utils.WriteCSV(csv_dir, []string{object_name, http.DetectContentType(data[:512]), time.Now().Format("2006-01-02 15:04:05 MST")})
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
+			record := []string{object_name, http.DetectContentType(data[:512]), time.Now().Format("2006-01-02 15:04:05 MST")}
+				if f, index := utils.FindName(csv_dir, object_name); f {
+					err = utils.UpdateCSV(csv_dir, "update", index, record)
+					if err != nil {
+						http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+						return
+					}
+				} else {
+					err = utils.WriteCSV(csv_dir, record)
+					if err != nil {
+						http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+						return
+					}
+				}
 
 			w.WriteHeader(status)
 			w.Write([]byte("Object was added successfully!"))

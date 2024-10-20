@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"triple-s/internal/utils"
@@ -66,8 +67,9 @@ func GetBucketsXML(dir string) ([]byte, int) {
 
 func DeleteBucket(name string, dir string) int {
 	if flag, index := utils.FindName(dir+"/buckets.csv", name); flag {
-		bucket_dir := dir + "/" + name
-		if utils.IsEmptyCSV(bucket_dir + "/objects.csv") {
+		bucket_dir := path.Join(dir, name)
+		csv_dir := path.Join(bucket_dir, "objects.csv")
+		if utils.IsEmptyCSV(csv_dir) {
 			// Remove bucket
 			err := os.RemoveAll(bucket_dir)
 			if err != nil {
@@ -75,18 +77,7 @@ func DeleteBucket(name string, dir string) int {
 			}
 
 			// Delete data from metadata
-			data, err := utils.ReadCSV(dir + "/buckets.csv")
-			if err != nil {
-				return http.StatusInternalServerError
-			}
-
-			data = append(data[0:index], data[index+1:]...)
-			err = utils.CreateCSV(dir + "/buckets.csv")
-			if err != nil {
-				return http.StatusInternalServerError
-			}
-
-			err = utils.WriteAllCSV(dir+"/buckets.csv", data)
+			err = utils.UpdateCSV(csv_dir, "delete", index, nil)
 			if err != nil {
 				return http.StatusInternalServerError
 			}
