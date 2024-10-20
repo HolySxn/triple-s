@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -59,8 +58,4 @@ func BucketHandler(dir string) http.HandlerFunc {
 			http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed)
 		}
 	}
-}
-
-func ObjectHnadler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Object handler %v\n", r.URL.Path)
 }

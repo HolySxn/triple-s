@@ -42,7 +42,7 @@ func main() {
 
 	mux.HandleFunc("/", handlers.BucketHandler(*dir))
 	// mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))
-	mux.HandleFunc("/{BucketName}/{ObjectKey}", handlers.ObjectHnadler)
+	mux.HandleFunc("/{BucketName}/{ObjectName}", handlers.ObjectHnadler(*dir))
 
 	log.Printf("starting server on :%v\n", *port)
 	err = http.ListenAndServe(":"+*port, mux)
