@@ -120,10 +120,10 @@ func CreateStorage(dir string) error {
 	return nil
 }
 
-func FindName(dir, name string) (bool, int) {
+func FindName(dir, name string) (bool, int, []string) {
 	file, err := os.Open(dir)
 	if err != nil {
-		return false, -1
+		return false, -1, nil
 	}
 	defer file.Close()
 
@@ -131,7 +131,7 @@ func FindName(dir, name string) (bool, int) {
 
 	_, err = reader.Read()
 	if err != nil {
-		return false, -1
+		return false, -1, nil
 	}
 
 	index := 1
@@ -142,13 +142,13 @@ func FindName(dir, name string) (bool, int) {
 		}
 
 		if record[0] == name {
-			return true, index
+			return true, index, record
 		}
 
 		index++
 	}
 
-	return false, -1
+	return false, -1, nil
 }
 
 func IsEmptyCSV(dir string) bool {

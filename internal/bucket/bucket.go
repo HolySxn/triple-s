@@ -2,6 +2,7 @@ package bucket
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -15,10 +16,10 @@ type ListAllMyBucketsResult struct {
 }
 
 type Bucket struct {
-	Name             string
-	CreationTime     string
-	LastModifiedTime string
-	Status           string
+	Name             string `xml:"Name"`
+	CreationTime     string `xml:"CreationTime"`
+	LastModifiedTime string `xml:"LastModifiedTime"`
+	Status           string `xml:"Status"`
 }
 
 func CreateBucket(name string, dir string) int {
@@ -32,7 +33,7 @@ func CreateBucket(name string, dir string) int {
 		return http.StatusConflict
 	}
 
-	metaData := []string{name, time.Now().Format("2006-01-02 15:04:05 MST"), time.Now().Format("2006-01-02 15:04:05 MST"), "Active"}
+	metaData := []string{name, time.Now().Format("2006-01-02 15:04:05 MST"), time.Now().Format("2006-01-02 15:04:05 MST"), "InActive"}
 	err = utils.WriteCSV(dir+"/buckets.csv", metaData)
 	if err != nil {
 		return http.StatusInternalServerError
@@ -66,10 +67,11 @@ func GetBucketsXML(dir string) ([]byte, int) {
 }
 
 func DeleteBucket(name string, dir string) int {
-	if flag, index := utils.FindName(dir+"/buckets.csv", name); flag {
+	if flag, index, record := utils.FindName(dir+"/buckets.csv", name); flag {
 		bucket_dir := path.Join(dir, name)
 		csv_dir := path.Join(bucket_dir, "objects.csv")
-		if utils.IsEmptyCSV(csv_dir) {
+		fmt.Println(record)
+		if record[3] == "InActive" {
 			// Remove bucket
 			err := os.RemoveAll(bucket_dir)
 			if err != nil {
@@ -90,3 +92,11 @@ func DeleteBucket(name string, dir string) int {
 		return http.StatusNotFound
 	}
 }
+
+// func isActiveBucket(name string, dir string) bool{
+// 	_, _, record := utils.FindName(name, dir)
+// 	if record[3] == "Active"{
+// 		return true
+// 	}
+// 	return false
+// }
