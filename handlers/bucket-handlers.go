@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/xml"
 	"net/http"
+	"path"
 	"strings"
 
 	"triple-s/internal/bucket"
@@ -11,6 +12,7 @@ import (
 
 func BucketHandler(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = path.Clean(r.URL.Path)
 		switch r.Method {
 		case http.MethodPut:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
@@ -35,6 +37,10 @@ func BucketHandler(dir string) http.HandlerFunc {
 			w.WriteHeader(status)
 			w.Write([]byte("Bucket created successfully"))
 		case http.MethodGet:
+			if r.URL.Path != "/" {
+				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+				return
+			}
 			xmlData, status := bucket.GetBucketsXML(dir + "/buckets.csv")
 			if status != http.StatusOK {
 				http.Error(w, http.StatusText(status), status)

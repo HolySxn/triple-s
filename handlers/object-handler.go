@@ -3,7 +3,6 @@ package handlers
 import (
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"strconv"
 	"time"
@@ -23,10 +22,47 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 		object_name := r.PathValue("ObjectName")
 		switch r.Method {
 		case http.MethodPut:
+			if !utils.IsValidObjectName(object_name) {
+				http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+				return
+			}
 			ObjectPut(w, r, dir, bucket_name, object_name)
 		case http.MethodGet:
-			ObjectGet(w, r, dir, bucket_name, object_name)
+			csv_dir := path.Join(dir, bucket_name, "objects.csv")
+			if f, _, _ := utils.FindName(csv_dir, object_name); f {
+				data, status := object.GetObject(path.Join(dir, bucket_name, object_name))
+				if status != http.StatusOK {
+					http.Error(w, http.StatusText(status), status)
+					return
+				}
+
+				w.WriteHeader(status)
+				w.Write(data)
+			} else {
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				return
+			}
 		case http.MethodDelete:
+			status := object.DeleteObject(object_name, path.Join(dir, bucket_name))
+			if status != http.StatusOK {
+				http.Error(w, http.StatusText(status), status)
+				return
+			}
+
+			bucket_dir := path.Join(dir, "buckets.csv")
+			_, index, record := utils.FindName(bucket_dir, bucket_name)
+			record[2] = time.Now().Format("2006-01-02 15:04:05 MST")
+			if utils.IsEmptyCSV(path.Join(dir, bucket_name, "objects.csv")) {
+				record[3] = "InActive"
+			}
+			err := utils.UpdateCSV(bucket_dir, "update", index, record)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			w.WriteHeader(status)
+			w.Write([]byte("Object was deleted successfully!"))
 
 		}
 	}
@@ -48,10 +84,11 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 
 	csv_dir := path.Join(dir, bucket_name, "objects.csv")
 	record := []string{
-		object_name, 
-		strconv.Itoa(int(r.ContentLength)), 
-		r.Header.Get("Content-Type"), 
-		time.Now().Format("2006-01-02 15:04:05 MST")}
+		object_name,
+		strconv.Itoa(int(r.ContentLength)),
+		r.Header.Get("Content-Type"),
+		time.Now().Format("2006-01-02 15:04:05 MST"),
+	}
 	if f, index, _ := utils.FindName(csv_dir, object_name); f {
 		err = utils.UpdateCSV(csv_dir, "update", index, record)
 		if err != nil {
@@ -78,27 +115,4 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 
 	w.WriteHeader(status)
 	w.Write([]byte("Object was added successfully!"))
-}
-
-func ObjectGet(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_name string) {
-	csv_dir := path.Join(dir, bucket_name, "objects.csv")
-	if f, _, _ := utils.FindName(csv_dir, object_name); f {
-		file, err := os.Open(path.Join(dir, bucket_name, object_name))
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		data, err := io.ReadAll(file)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		w.Write(data)
-	} else {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-	}
-}
-
-func deleteBucket(){
-	
 }

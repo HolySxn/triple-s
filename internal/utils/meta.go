@@ -71,6 +71,8 @@ func ReadCSV(dir string) ([][]string, error) {
 	return records, nil
 }
 
+// Delete or update entity from csv
+// Flags: "delete" and "update"
 func UpdateCSV(dir string, flag string, index int, record []string) error {
 	data, err := ReadCSV(dir)
 	if err != nil {

@@ -26,19 +26,20 @@ func CreateBucket(name string, dir string) int {
 		return http.StatusBadRequest
 	}
 
-	bucket_dir := dir + "/" + name
-	err := os.Mkdir(bucket_dir, os.ModePerm)
-	if err != nil {
+	if flag, _, _ := utils.FindName(dir+"/buckets.csv", name); !flag {
+		bucket_dir := dir + "/" + name
+		os.Mkdir(bucket_dir, os.ModePerm)
+
+		metaData := []string{name, time.Now().Format("2006-01-02 15:04:05 MST"), time.Now().Format("2006-01-02 15:04:05 MST"), "InActive"}
+		err := utils.WriteCSV(dir+"/buckets.csv", metaData)
+		if err != nil {
+			return http.StatusInternalServerError
+		}
+
+		return http.StatusOK
+	} else {
 		return http.StatusConflict
 	}
-
-	metaData := []string{name, time.Now().Format("2006-01-02 15:04:05 MST"), time.Now().Format("2006-01-02 15:04:05 MST"), "InActive"}
-	err = utils.WriteCSV(dir+"/buckets.csv", metaData)
-	if err != nil {
-		return http.StatusInternalServerError
-	}
-
-	return http.StatusOK
 }
 
 func GetBucketsXML(dir string) ([]byte, int) {
