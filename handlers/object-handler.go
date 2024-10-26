@@ -98,3 +98,7 @@ func ObjectGet(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 }
+
+func deleteBucket(){
+	
+}

@@ -2,7 +2,6 @@ package bucket
 
 import (
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -70,7 +69,6 @@ func DeleteBucket(name string, dir string) int {
 	if flag, index, record := utils.FindName(dir+"/buckets.csv", name); flag {
 		bucket_dir := path.Join(dir, name)
 		csv_dir := path.Join(bucket_dir, "objects.csv")
-		fmt.Println(record)
 		if record[3] == "InActive" {
 			// Remove bucket
 			err := os.RemoveAll(bucket_dir)

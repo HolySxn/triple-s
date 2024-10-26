@@ -9,14 +9,14 @@ func IsExist(path string) bool {
 	return !os.IsNotExist(err)
 }
 
-func PahtFiles(path string) []string{
-	f, err := os.Open(path)
-	if err != nil {
-		return nil
-	}
-	defer f.Close()
+// func PahtFiles(path string) []string{
+// 	f, err := os.Open(path)
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	defer f.Close()
 
-	names, _ := f.Readdirnames(0)
+// 	names, _ := f.Readdirnames(0)
 
-	return names
-}
+// 	return names
+// }
