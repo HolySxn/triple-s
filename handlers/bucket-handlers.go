@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/xml"
 	"net/http"
-	"path"
 	"strings"
 
 	"triple-s/internal/bucket"
@@ -12,7 +11,6 @@ import (
 
 func BucketHandler(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = path.Clean(r.URL.Path)
 		switch r.Method {
 		case http.MethodPut:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
