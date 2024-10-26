@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"triple-s/handlers"
 	"triple-s/internal/utils"
@@ -20,17 +21,7 @@ func main() {
 	flag.Parse()
 
 	if *help {
-		message := `Simple Storage Service.
-**Usage:**
-	triple-s [-port <N>] [-dir <S>]  
-	triple-s --help
-		
-**Options:**
-	- --help     Show this screen.
-	- --port N   Port number
-	- --dir S    Path to the directory`
-		fmt.Println(message)
-		return
+		printHelp()
 	}
 
 	err := utils.CreateStorage(*dir)
@@ -41,10 +32,24 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", handlers.BucketHandler(*dir))
-	// mux.HandleFunc("/{BucketName}", handlers.BucketHandler(*dir))
 	mux.HandleFunc("/{BucketName}/{ObjectName}", handlers.ObjectHnadler(*dir))
 
 	log.Printf("starting server on :%v\n", *port)
 	err = http.ListenAndServe(":"+*port, mux)
 	log.Fatal(err)
+}
+
+func printHelp() {
+	message := `Simple Storage Service.
+
+**Usage:**
+	triple-s [-port <N>] [-dir <S>]  
+	triple-s --help
+			
+**Options:**
+	- --help     Show this screen.
+	- --port N   Port number
+	- --dir S    Path to the directory`
+	fmt.Println(message)
+	os.Exit(0)
 }

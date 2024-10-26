@@ -92,10 +92,4 @@ func DeleteBucket(name string, dir string) int {
 	}
 }
 
-// func isActiveBucket(name string, dir string) bool{
-// 	_, _, record := utils.FindName(name, dir)
-// 	if record[3] == "Active"{
-// 		return true
-// 	}
-// 	return false
-// }
+
