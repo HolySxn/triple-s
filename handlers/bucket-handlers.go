@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/xml"
 	"net/http"
 	"strings"
 
@@ -14,52 +13,48 @@ func BucketHandler(dir string) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPut:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
-			status := bucket.CreateBucket(bucketName, dir)
+			status, message := bucket.CreateBucket(bucketName, dir)
 			if status != http.StatusOK {
-				http.Error(w, http.StatusText(status), status)
+				utils.XMLResponse(w, status, utils.Error{Message: message, Resource: r.URL.Path})
 				return
 			}
 
 			err := utils.CreateCSV(dir + "/" + bucketName + "/objects.csv")
 			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
 				return
 			}
 
 			err = utils.WriteCSV(dir+"/"+bucketName+"/objects.csv", []string{"ObjectKey", "Size", "ContentType", "LastModified"})
 			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
 				return
 			}
 
-			w.WriteHeader(status)
-			w.Write([]byte("Bucket created successfully"))
+			utils.XMLResponse(w, status, utils.PutResult{Message: message, Key: bucketName})
 		case http.MethodGet:
 			if r.URL.Path != "/" {
-				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+				utils.XMLResponse(w, http.StatusBadRequest, utils.Error{Message: "Bad Request", Resource: r.URL.Path})
 				return
 			}
-			xmlData, status := bucket.GetBucketsXML(dir + "/buckets.csv")
+			data, status := bucket.GetBucketsXML(dir + "/buckets.csv")
 			if status != http.StatusOK {
-				http.Error(w, http.StatusText(status), status)
+				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/xml")
-			w.WriteHeader(status)
-			w.Write([]byte(xml.Header))
-			w.Write(xmlData)
+			utils.XMLResponse(w, status, data)
 		case http.MethodDelete:
 			bucketName := strings.TrimPrefix(r.URL.Path, "/")
-			status := bucket.DeleteBucket(bucketName, dir)
+			status, message := bucket.DeleteBucket(bucketName, dir)
 			if status != http.StatusNoContent {
-				http.Error(w, http.StatusText(status), status)
+				utils.XMLResponse(w, status, utils.Error{Message: message, Resource: r.URL.Path})
 				return
 			}
-			w.WriteHeader(status)
-			w.Write([]byte("Bucket was successully deleted"))
+
+			utils.XMLResponse(w, status, utils.DeleteResult{Message: message, Key: bucketName})
 		default:
-			http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed)
+			utils.XMLResponse(w, http.StatusMethodNotAllowed, utils.Error{Message: "Method is not allowed", Resource: r.Method})
 		}
 	}
 }
