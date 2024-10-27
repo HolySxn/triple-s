@@ -53,7 +53,7 @@ func GetBucketsXML(dir string) (utils.ListAllMyBucketsResult, int) {
 func DeleteBucket(name string, dir string) (int, string) {
 	if flag, index, record := utils.FindName(dir+"/buckets.csv", name); flag {
 		bucket_dir := path.Join(dir, name)
-		csv_dir := path.Join(bucket_dir, "objects.csv")
+		csv_dir := path.Join(dir, "buckets.csv")
 		if record[3] == "InActive" {
 			// Remove bucket
 			err := os.RemoveAll(bucket_dir)

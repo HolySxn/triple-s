@@ -52,7 +52,7 @@ func BucketHandler(dir string) http.HandlerFunc {
 				return
 			}
 
-			utils.XMLResponse(w, status, utils.DeleteResult{Message: message, Key: bucketName})
+			w.WriteHeader(status)
 		default:
 			utils.XMLResponse(w, http.StatusMethodNotAllowed, utils.Error{Message: "Method is not allowed", Resource: r.Method})
 		}
