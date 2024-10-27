@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+// CreateCSV creates a new CSV file at the specified path.
+// It initializes the file and prepares it for writing, but does not write any data.
 func CreateCSV(dir string) error {
 	file, err := os.Create(dir)
 	if err != nil {
@@ -20,6 +22,7 @@ func CreateCSV(dir string) error {
 	return nil
 }
 
+// WriteCSV appends a single record (row) to an existing CSV file.
 func WriteCSV(dir string, record []string) error {
 	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o0644)
 	if err != nil {
@@ -37,6 +40,7 @@ func WriteCSV(dir string, record []string) error {
 	return nil
 }
 
+// WriteAllCSV writes multiple records (rows) to a CSV file in one batch.
 func WriteAllCSV(dir string, record [][]string) error {
 	file, err := os.OpenFile(dir, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 	if err != nil {
@@ -54,6 +58,7 @@ func WriteAllCSV(dir string, record [][]string) error {
 	return nil
 }
 
+// ReadCSV reads all data from a CSV file and returns it as a 2D slice of strings.
 func ReadCSV(dir string) ([][]string, error) {
 	file, err := os.Open(dir)
 	if err != nil {
@@ -71,8 +76,8 @@ func ReadCSV(dir string) ([][]string, error) {
 	return records, nil
 }
 
-// Delete or update entity from csv
-// Flags: "delete" and "update"
+// UpdateCSV updates or deletes a record in the CSV file based on the flag.
+// The "delete" flag removes the record at the specified index, and "update" modifies it.
 func UpdateCSV(dir string, flag string, index int, record []string) error {
 	data, err := ReadCSV(dir)
 	if err != nil {
@@ -101,6 +106,7 @@ func UpdateCSV(dir string, flag string, index int, record []string) error {
 	return nil
 }
 
+// CreateStorage initializes storage by creating a directory and "buckets.csv" metadata file.
 func CreateStorage(dir string) error {
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
@@ -122,6 +128,8 @@ func CreateStorage(dir string) error {
 	return nil
 }
 
+// FindName searches for a specific record in a CSV file by name (first column).
+// It returns a flag indicating if the record is found, its index, and the record itself.
 func FindName(dir, name string) (bool, int, []string) {
 	file, err := os.Open(dir)
 	if err != nil {
@@ -153,6 +161,7 @@ func FindName(dir, name string) (bool, int, []string) {
 	return false, -1, nil
 }
 
+// IsEmptyCSV checks if a CSV file contains only the header row.
 func IsEmptyCSV(dir string) bool {
 	data, err := ReadCSV(dir)
 	if err != nil {
