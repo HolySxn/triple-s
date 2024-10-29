@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"triple-s/handlers"
 	"triple-s/internal/utils"
 )
@@ -59,5 +58,5 @@ func printHelp() {
 	- --port N   Port number
 	- --dir S    Path to the directory`
 	fmt.Println(message)
-	os.Exit(0) 
+	os.Exit(0)
 }
