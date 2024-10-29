@@ -20,21 +20,36 @@ func BucketHandler(dir string) http.HandlerFunc {
 			// Create a new bucket with the specified name
 			status, message := bucket.CreateBucket(bucketName, dir)
 			if status != http.StatusOK {
-				utils.XMLResponse(w, status, utils.Error{Message: message, Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(status),
+						Message:  message,
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
 			// Create a CSV file for storing objects metadata in the new bucket's directory
 			err := utils.CreateCSV(dir + "/" + bucketName + "/objects.csv")
 			if err != nil {
-				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(http.StatusInternalServerError),
+						Message:  "Can not create metadata",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
 			// Write header columns for the objects CSV file
 			err = utils.WriteCSV(dir+"/"+bucketName+"/objects.csv", []string{"ObjectKey", "Size", "ContentType", "LastModified"})
 			if err != nil {
-				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(http.StatusInternalServerError),
+						Message:  "Can not add new record into objects metadata",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
@@ -43,14 +58,24 @@ func BucketHandler(dir string) http.HandlerFunc {
 		case http.MethodGet:
 			// Handle GET requests to list all buckets; only the root path ("/") is allowed
 			if r.URL.Path != "/" {
-				utils.XMLResponse(w, http.StatusBadRequest, utils.Error{Message: "Bad Request", Resource: r.URL.Path})
+				utils.XMLResponse(w, http.StatusBadRequest,
+					utils.Error{
+						Code:     http.StatusText(http.StatusBadRequest),
+						Message:  "Only the root path / is allowed",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
 			// Retrieve bucket list in XML format from CSV file
 			data, status := bucket.GetBucketsXML(dir + "/buckets.csv")
 			if status != http.StatusOK {
-				utils.XMLResponse(w, status, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(http.StatusInternalServerError),
+						Message:  "Can not read buckets metadata",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
@@ -63,7 +88,12 @@ func BucketHandler(dir string) http.HandlerFunc {
 			// Attempt to delete the specified bucket
 			status, message := bucket.DeleteBucket(bucketName, dir)
 			if status != http.StatusNoContent {
-				utils.XMLResponse(w, status, utils.Error{Message: message, Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(status),
+						Message:  message,
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
@@ -71,7 +101,12 @@ func BucketHandler(dir string) http.HandlerFunc {
 			w.WriteHeader(status)
 		default:
 			// If the HTTP method is not PUT, GET, or DELETE, respond with a 405 Method Not Allowed
-			utils.XMLResponse(w, http.StatusMethodNotAllowed, utils.Error{Message: "Method is not allowed", Resource: r.Method})
+			utils.XMLResponse(w, http.StatusMethodNotAllowed,
+				utils.Error{
+					Code:     http.StatusText(http.StatusMethodNotAllowed),
+					Message:  "Method" + r.Method + "is not allowed",
+					Resource: r.Method,
+				})
 		}
 	}
 }

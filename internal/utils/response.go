@@ -8,6 +8,7 @@ import (
 // Error structure represents an XML response for error messages.
 // It includes a message and the resource that caused the error.
 type Error struct {
+	Code     string `xml:"Code"`
 	Message  string `xml:"Message"`
 	Resource string `xml:"Resource"`
 }

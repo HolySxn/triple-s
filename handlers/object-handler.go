@@ -20,7 +20,12 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 
 		// Verify if the bucket exists by checking "buckets.csv"
 		if f, _, _ := utils.FindName(path.Join(dir, "buckets.csv"), bucket_name); !f {
-			utils.XMLResponse(w, http.StatusNotFound, utils.Error{Message: "Bucket is not found", Resource: r.URL.Path})
+			utils.XMLResponse(w, http.StatusNotFound,
+				utils.Error{
+					Code:     http.StatusText(http.StatusNotFound),
+					Message:  "Bucket is not found",
+					Resource: r.URL.Path,
+				})
 			return
 		}
 
@@ -30,7 +35,12 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 		case http.MethodPut:
 			// Validate object name
 			if !utils.IsValidObjectName(object_name) {
-				utils.XMLResponse(w, http.StatusBadRequest, utils.Error{Message: "Invalid object name", Resource: r.URL.Path})
+				utils.XMLResponse(w, http.StatusBadRequest,
+					utils.Error{
+						Code:     http.StatusText(http.StatusBadRequest),
+						Message:  "Invalid object name",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
@@ -39,27 +49,45 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 		case http.MethodGet:
 			// Check if object exists by searching in "objects.csv"
 			csv_dir := path.Join(dir, bucket_name, "objects.csv")
-			if f, _, _ := utils.FindName(csv_dir, object_name); f {
+			if f, _, record := utils.FindName(csv_dir, object_name); f {
 				// Retrieve object data
 				data, status := object.GetObject(path.Join(dir, bucket_name, object_name))
 				if status != http.StatusOK {
-					utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+					utils.XMLResponse(w, http.StatusInternalServerError,
+						utils.Error{
+							Code:     http.StatusText(http.StatusInternalServerError),
+							Message:  "Can not get object",
+							Resource: r.URL.Path,
+						})
 					return
 				}
 
 				// Write object data to response
+				w.Header().Set("Key", record[0])
+				w.Header().Set("Content-Legth", strconv.Itoa(len(data)))
+				w.Header().Set("Last-Modified", record[3])
 				w.WriteHeader(status)
 				w.Write(data)
 			} else {
 				// If object is not found, respond with 404 Not Found
-				utils.XMLResponse(w, http.StatusNotFound, utils.Error{Message: "Object is not found", Resource: r.URL.Path})
+				utils.XMLResponse(w, http.StatusNotFound,
+					utils.Error{
+						Code:     http.StatusText(http.StatusNotFound),
+						Message:  "Object is not found",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 		case http.MethodDelete:
 			// Attempt to delete the object
 			status, message := object.DeleteObject(object_name, path.Join(dir, bucket_name))
 			if status != http.StatusOK {
-				utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: message, Resource: r.URL.Path})
+				utils.XMLResponse(w, status,
+					utils.Error{
+						Code:     http.StatusText(status),
+						Message:  message,
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
@@ -72,15 +100,27 @@ func ObjectHnadler(dir string) http.HandlerFunc {
 			}
 			err := utils.UpdateCSV(bucket_dir, "update", index, record)
 			if err != nil {
-				utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+				utils.XMLResponse(w, http.StatusInternalServerError,
+					utils.Error{
+						Code:     http.StatusText(http.StatusInternalServerError),
+						Message:  "Can not update buckets metadata",
+						Resource: r.URL.Path,
+					})
 				return
 			}
 
 			// Respond with a confirmation message in XML format
+			w.Header().Set("Connetction", "Close")
+			w.Header().Set("Content-Lenght", "0")
 			utils.XMLResponse(w, status, utils.DeleteResult{Message: message, Key: object_name})
 		default:
 			// Respond with 405 Method Not Allowed for unsupported HTTP methods
-			utils.XMLResponse(w, http.StatusMethodNotAllowed, utils.Error{Message: "Method is not allowed", Resource: r.Method})
+			utils.XMLResponse(w, http.StatusMethodNotAllowed,
+				utils.Error{
+					Code:     http.StatusText(http.StatusMethodNotAllowed),
+					Message:  "Method" + r.Method + "is not allowed",
+					Resource: r.Method,
+				})
 		}
 	}
 }
@@ -91,7 +131,12 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 	// Read the body of the PUT request to get the object data
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+		utils.XMLResponse(w, http.StatusInternalServerError,
+			utils.Error{
+				Code:     http.StatusText(http.StatusInternalServerError),
+				Message:  "Can not get object data",
+				Resource: r.URL.Path,
+			})
 		return
 	}
 
@@ -101,7 +146,12 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 	// Store the object data using object.PutObject
 	status, message := object.PutObject(data, object_dir)
 	if status != http.StatusOK {
-		utils.XMLResponse(w, status, utils.Error{Message: message, Resource: r.URL.Path})
+		utils.XMLResponse(w, status,
+			utils.Error{
+				Code:     http.StatusText(status),
+				Message:  message,
+				Resource: r.URL.Path,
+			})
 		return
 	}
 
@@ -119,14 +169,24 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 		// Update existing object entry
 		err = utils.UpdateCSV(csv_dir, "update", index, record)
 		if err != nil {
-			utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+			utils.XMLResponse(w, http.StatusInternalServerError,
+				utils.Error{
+					Code:     http.StatusText(http.StatusInternalServerError),
+					Message:  "Can not update objects metadata",
+					Resource: r.URL.Path,
+				})
 			return
 		}
 	} else {
 		// Write new object entry to CSV
 		err = utils.WriteCSV(csv_dir, record)
 		if err != nil {
-			utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+			utils.XMLResponse(w, http.StatusInternalServerError,
+				utils.Error{
+					Code:     http.StatusText(http.StatusInternalServerError),
+					Message:  "Can not add new record into objects metadata",
+					Resource: r.URL.Path,
+				})
 			return
 		}
 	}
@@ -140,7 +200,12 @@ func ObjectPut(w http.ResponseWriter, r *http.Request, dir, bucket_name, object_
 	}
 	err = utils.UpdateCSV(bucket_dir, "update", index, record)
 	if err != nil {
-		utils.XMLResponse(w, http.StatusInternalServerError, utils.Error{Message: "Internal Server Error", Resource: r.URL.Path})
+		utils.XMLResponse(w, http.StatusInternalServerError,
+			utils.Error{
+				Code:     http.StatusText(http.StatusInternalServerError),
+				Message:  "Can not update buckets metadata",
+				Resource: r.URL.Path,
+			})
 		return
 	}
 
